@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/bldulam1/veloparser/lidarpacket"
+	lp "github.com/bldulam1/go-veloparser/lidar"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/pcap"
 )
@@ -17,12 +17,12 @@ func main() {
 	packets := gopacket.NewPacketSource(handle, handle.LinkType()).Packets()
 
 	for packet := range packets {
-		if len(packet.Data()) == 1248 {
-			data := pkt.LidarPacket{
-				packet.Data(),
-			}
+		data := packet.Data()
 
-			fmt.Println(data.Timestamp(), data.ReturnMode(), data.ProductId(), data.ProductModel())
+		if len(data) == 1248 {
+			lidarp := lp.LidarPacket{data}
+
+			fmt.Println(lidarp.Timestamp(), lidarp.ReturnMode(), lidarp.ProductId(), lidarp.ProductModel())
 
 			// for _, b := range data.blocks() {
 			// 	for ci, c := range b.channels() {

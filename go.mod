@@ -1,4 +1,4 @@
-module github.com/veloparser
+module github.com/bldulam1/go-veloparser
 
 go 1.16
 
