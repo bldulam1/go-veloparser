@@ -20,9 +20,21 @@ func main() {
 		data := packet.Data()
 
 		if len(data) == 1248 {
-			lidarp := lp.LidarPacket{data}
+			lpacket := lp.LidarPacket{data}
 
-			fmt.Println(lidarp.Timestamp(), lidarp.ReturnMode(), lidarp.ProductId(), lidarp.ProductModel())
+			fmt.Println(lpacket.Timestamp(), lpacket.ReturnMode(), lpacket.ProductId(), lpacket.ProductModel())
+
+			for _, b := range lpacket.Blocks() {
+				fmt.Println(b.AzimuthF())
+				for i, lc := range b.Channels() {
+					fmt.Println(
+						lp.VerticalAngleMap[i],
+
+						i, lc.Distance())
+				}
+			}
+
+
 
 			// for _, b := range data.blocks() {
 			// 	for ci, c := range b.channels() {

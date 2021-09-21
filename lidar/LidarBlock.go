@@ -15,7 +15,7 @@ func (b LidarPacketBlock) AzimuthI() uint16 {
 }
 
 func (b LidarPacketBlock) Channels() []LidarChannel {
-	channels := make([]LidarChannel, LB_COUNT12)
+	channels := make([]LidarChannel, LC_COUNT16)
 
 	start := LC_INDEX4
 	for i := 0; i < len(channels); i++ {
