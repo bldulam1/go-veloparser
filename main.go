@@ -3,44 +3,73 @@ package main
 import (
 	"fmt"
 
-	lp "github.com/bldulam1/go-veloparser/lidar"
+	"github.com/bldulam1/go-veloparser/lidar"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/pcap"
 )
 
 func main() {
-	handle, err := pcap.OpenOffline("./.cache/sample.pcap")
-	if err != nil {
-		panic(err)
+	for frame := range generateFrame() {
+		fmt.Println(frame)
+		break
 	}
+}
 
-	packets := gopacket.NewPacketSource(handle, handle.LinkType()).Packets()
+func generateBlocks() <-chan lidar.LidarPacketBlock {
+	ch := make(chan lidar.LidarPacketBlock)
 
-	for packet := range packets {
-		data := packet.Data()
+	go func() {
+		defer close(ch)
 
-		if len(data) == 1248 {
-			lpacket := lp.LidarPacket{data}
+		handle, err := pcap.OpenOffline("./.cache/sample.pcap")
+		if err != nil {
+			panic(err)
+		}
 
-			fmt.Println(lpacket.Timestamp(), lpacket.ReturnMode(), lpacket.ProductId(), lpacket.ProductModel())
-
-			for _, b := range lpacket.Blocks() {
-				fmt.Println(b.AzimuthF())
-				for i, lc := range b.Channels() {
-					fmt.Println(
-						lp.VerticalAngleMap[i],
-
-						i, lc.Distance())
+		for packet := range gopacket.NewPacketSource(handle, handle.LinkType()).Packets() {
+			data := packet.Data()
+			if len(data) == lidar.LP_BYTE_LEN {
+				blocks := lidar.LidarPacket{data}.Blocks()
+				for _, block := range blocks {
+					ch <- block
 				}
 			}
-
-
-
-			// for _, b := range data.blocks() {
-			// 	for ci, c := range b.channels() {
-			// 		fmt.Println(ci, b.azimuthF(), c.distance(), c.reflectivity(), data.timestamp())
-			// 	}
-			// }
 		}
-	}
+	}()
+
+	return ch
+}
+
+func generateFrame() <-chan []lidar.LidarPacketBlock {
+	ch := make(chan []lidar.LidarPacketBlock)
+
+	go func() {
+		defer close(ch)
+
+		var firstAz uint16
+		var currAz uint16
+		var prevAz uint16
+
+		blocks := make([]lidar.LidarPacketBlock, 0)
+
+		for block := range generateBlocks() {
+			blocks = append(blocks, block)
+			currAz = block.AzimuthI()
+
+			if prevAz <= firstAz && firstAz <= currAz && len(blocks) > 2 {
+				ch <- blocks
+				blocks = make([]lidar.LidarPacketBlock, 0)
+			}
+
+			// Initialize Az0
+			if firstAz == 0 {
+				firstAz = currAz
+			}
+
+			// Save currAzimuth to prevAzimuth
+			prevAz = currAz
+		}
+	}()
+
+	return ch
 }

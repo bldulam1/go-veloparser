@@ -1,5 +1,15 @@
 package lidar
 
+const (
+	LB_SIZE100  = 100
+	LB_INDEX42  = 42
+	LB_COUNT12  = 12
+	LC_INDEX4   = 4
+	LC_SIZE3    = 3
+	LC_COUNT16  = 16
+	LP_BYTE_LEN = 1248
+)
+
 type VerticalAngle struct {
 	angleDeg             int16
 	verticalCorrectionMM float32

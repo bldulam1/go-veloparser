@@ -2,15 +2,6 @@ package lidar
 
 import "encoding/binary"
 
-const (
-	LB_SIZE100 = 100
-	LB_INDEX42 = 42
-	LB_COUNT12 = 12
-	LC_INDEX4  = 4
-	LC_SIZE3   = 3
-	LC_COUNT16 = 16
-)
-
 type LidarPacket struct {
 	Value []byte
 }
@@ -59,4 +50,10 @@ func (l LidarPacket) Blocks() []LidarPacketBlock {
 	return blocks
 }
 
-
+func (l LidarPacket) Azimuths() []uint16 {
+	azimuths := make([]uint16, LB_COUNT12)
+	for i, lpb := range l.Blocks() {
+		azimuths[i] = lpb.AzimuthI()
+	}
+	return azimuths
+}
